@@ -20,66 +20,70 @@ headers = {
 #완결
 #url = f"https://api.joara.com/v1/book/list.joa?api_key=mw_8ba234e7801ba288554ca07ae44c7&ver=2.6.3&device=mw&deviceuid=*&devicetoken=mw&store=finish&orderby=redate&offset=20&page={num}"
 
-async def get_novel_list(session, nove_list):
-    end = False
-    for num in range(1, end_num):
-        url = f"https://api.joara.com/v1/book/list.joa?api_key=mw_8ba234e7801ba288554ca07ae44c7&ver=2.6.3&device=mw&deviceuid=*&devicetoken=mw&store=&orderby=redate&offset=20&page={num}&class="
+MAX_CONCURRENT_REQUESTS = 5
+
+async def fetch_novel(session, url, novel_list, sem):
+    async with sem:
         try:
-            while True:
-                async with session.get(url, headers=headers) as res:
-                    if res.status == 429:
-                        # 대기시간을 무작위로 설정한 후 재시도
-                        wait_time = random.randint(5, 10)  # 예: 5~10초 대기
-                        print(f"유료 신규베스트 순회{i}회 오류")
-                        print(f"HTTP 오류 429: 대기 후 재시도 ({wait_time}초 대기)")
-                        await asyncio.sleep(wait_time)
-                        continue  # 현재 페이지 재시도
-                    elif res.status != 200:
-                        print(f"HTTP 오류: {res.status}")
-                        break  # 오류가 발생한 경우 현재 페이지를 스킵하고 다음 페이지로 이동
-                    print(f"페이지 순회 {num}회")
+            async with session.get(url) as res:
+                if res.status == 429:
+                    wait_time = random.randint(5, 10)
+                    print(f"HTTP 오류 429: 대기 후 재시도 ({wait_time}초 대기)")
+                    await asyncio.sleep(wait_time)
+                elif res.status == 403:
+                    wait_time = random.randint(5, 10)
+                    print(f"HTTP 오류 403: 대기 후 재시도 ({wait_time}초 대기)")
+                    await asyncio.sleep(wait_time)
+                elif res.status != 200:
+                    print(f"HTTP 오류: {res.status}")
+                else:
+                    print(f"페이지 순회 {url}")
                     page = await res.json()
                     page = page['books']
-                    if not page:
-                        print("최대 페이지 도달")
-                        end = True
-                        return end
-                        break
-                    else:
-                        for i in page:
-                            novel_info = set_novel_info(platform="Joara",
-                                                        title=i['subject'],
-                                                        info=i['intro'].replace("\n", "").replace("\r", ""),
-                                                        author_id=i['writer_id'],
-                                                        author=i['writer_name'],
-                                                        tag=i['category_ko_name'],
-                                                        keyword=i['keyword'],
-                                                        chapter=i['cnt_chapter'],
-                                                        view=i['cnt_page_read'],
-                                                        like=i['cnt_recom'],
-                                                        favorite=i['cnt_favorite'],
-                                                        thumbnail=i['book_img'],
-                                                        finish_state=i['chk_finish'],
-                                                        is_finish=i['is_finish'],
-                                                        createdDate=i['created'],
-                                                        updatedDate=i['updated'],
-                                                        id=i['book_code'],
-                                                        adult=i['is_adult'])
-                            nove_list.append(novel_info)
-                        break
+                    for i in page:
+                        novel_info = set_novel_info(platform="Joara",
+                                                    title=i['subject'],
+                                                    info=i['intro'].replace("\n", "").replace("\r", ""),
+                                                    author_id=i['writer_id'],
+                                                    author=i['writer_name'],
+                                                    tag=i['category_ko_name'],
+                                                    keyword=i['keyword'],
+                                                    chapter=i['cnt_chapter'],
+                                                    view=i['cnt_page_read'],
+                                                    like=i['cnt_recom'],
+                                                    favorite=i['cnt_favorite'],
+                                                    thumbnail=i['book_img'],
+                                                    finish_state=i['chk_finish'],
+                                                    is_finish=i['is_finish'],
+                                                    createdDate=i['created'],
+                                                    updatedDate=i['updated'],
+                                                    id=i['book_code'],
+                                                    adult=i['is_adult'])
+                        novel_list.append(novel_info)
+                    print(f"페이지 순회 완료 {url}")
         except aiohttp.ClientError as e:
             print(f"{url}에서 데이터를 가져오는 중 오류 발생: {e}")
-            print(f"현재 페이지: {num}")
+
+
+async def get_novel_list(session, novel_list, end_num):
+    sem = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
+    tasks = []
+    count = 1
+    for num in range(1, end_num):
+        url = f"https://api.joara.com/v1/book/list.joa?api_key=mw_8ba234e7801ba288554ca07ae44c7&ver=2.6.3&device=mw&deviceuid=*&devicetoken=mw&store=&orderby=redate&offset=20&page={num}&class="
+        tasks.append(fetch_novel(session, url, novel_list, sem))
+
+    await asyncio.gather(*tasks)
 
 
 async def main_async():
-    async with aiohttp.ClientSession() as session:
-        await get_novel_list(session, novel_list)
+    end_num = 1000
+    novel_list = []
 
-end_num = 10
-novel_list = []
-loop = asyncio.new_event_loop()
-asyncio.set_event_loop(loop)
-loop.run_until_complete(main_async())
-loop.close()
-store_info(novel_list)
+    async with aiohttp.ClientSession() as session:
+        await get_novel_list(session, novel_list, end_num)
+
+    # 이후 novel_list를 저장하거나 처리할 수 있음
+    store_info(novel_list)
+
+asyncio.run(main_async())
