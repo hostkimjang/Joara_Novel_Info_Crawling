@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Black">
+    <option name="executionMode" value="BINARY" />
+    <option name="pathToExecutable" value="C:\ProgramData\anaconda3\Scripts\black.exe" />
+    <option name="sdkUUID" value="78f40d3b-ccbb-407b-9a0d-5e54eb0a179f" />
+  </component>
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.10 (Joara_Novel_Crawling)" project-jdk-type="Python SDK" />
+</project>
