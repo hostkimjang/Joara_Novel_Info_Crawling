@@ -1,4 +1,6 @@
 import pprint
+import time
+import datetime
 import aiohttp
 import random
 import asyncio
@@ -12,7 +14,6 @@ import json
 
 headers = {
     "User-Agent": "Mozilla/5.0 (Linux; Android 10; SM-G975N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.210 Mobile Safari/537.36"
-
 }
 
 #최신
@@ -20,7 +21,7 @@ headers = {
 #완결
 #url = f"https://api.joara.com/v1/book/list.joa?api_key=mw_8ba234e7801ba288554ca07ae44c7&ver=3.6&device=mw&deviceuid=*&devicetoken=mw&store=finish&orderby=redate&offset=20&page={num}"
 
-MAX_CONCURRENT_REQUESTS = 20
+MAX_CONCURRENT_REQUESTS = 10
 
 
 async def fetch_novel(session, url, novel_list, sem, end_event):
@@ -85,7 +86,9 @@ async def get_novel_list(session, novel_list, end_num, end_event):
     await asyncio.gather(*tasks)
 
 async def main_async():
-    end_num = 12000
+
+    start = time.time()
+    end_num = 10000
     novel_list = []
     end_event = asyncio.Event()  # 종료 이벤트를 나타내는 Event 객체 생성
 
@@ -94,9 +97,15 @@ async def main_async():
 
     # 종료 이벤트를 확인하여 작업이 완료되었음을 판단할 수 있음
     store_info(novel_list)
+    end = time.time()
+    sec = (end - start)
+    result = datetime.timedelta(seconds=sec)
     if end_event.is_set():
         print("데이터 수집 완료")
-        print(f"총: {len(novel_list)}")
+
+    print(f"총 크롤링 개수: {len(novel_list)}")
+    print(f"크롤러 동작 시간 : {result}")
+
 
 asyncio.run(main_async())
 # asyncio.run은 주피터 노트북과 같은 환경에서 실행할 때 작동하지 않으므로 주석 처리하고 사용하십시오.
