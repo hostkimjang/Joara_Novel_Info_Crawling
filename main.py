@@ -4,6 +4,8 @@ import datetime
 import aiohttp
 import random
 import asyncio
+
+from DB_processing import store_db
 from info import set_novel_info
 from store import store_info
 import re
@@ -88,7 +90,7 @@ async def get_novel_list(session, novel_list, end_num, end_event):
 async def main_async():
 
     start = time.time()
-    end_num = 10000
+    end_num = 100000
     novel_list = []
     end_event = asyncio.Event()  # 종료 이벤트를 나타내는 Event 객체 생성
 
@@ -107,8 +109,12 @@ async def main_async():
     print(f"크롤러 동작 시간 : {result}")
 
 
-asyncio.run(main_async())
-# asyncio.run은 주피터 노트북과 같은 환경에서 실행할 때 작동하지 않으므로 주석 처리하고 사용하십시오.
 
-# 이후 novel_list를 저장하거나 처리할 수 있음
-#store_info(novel_list)
+if __name__ == "__main__":
+
+    asyncio.run(main_async())
+    store_db()
+    # asyncio.run은 주피터 노트북과 같은 환경에서 실행할 때 작동하지 않으므로 주석 처리하고 사용하십시오.
+
+    # 이후 novel_list를 저장하거나 처리할 수 있음
+    #store_info(novel_list)
