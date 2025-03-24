@@ -13,6 +13,12 @@ def load_novel_data():
         pprint(f"총 {len(data)}개 데이터 로드 완료")
         return data
 
+def load_novel_data_end():
+    with open('joara_novel_info_end.json', 'r', encoding='utf-8') as f:
+        data = json.load(f)
+        pprint(f"총 {len(data)}개 데이터 로드 완료")
+        return data
+
 
 def change_log(result):
     timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
@@ -31,7 +37,16 @@ def change_log(result):
 
 
 def store_db():
-    novel_list = load_novel_data()
+    novels_from_main = load_novel_data()
+    novels_from_end = load_novel_data_end()
+
+    novel_list = novels_from_main
+    novel_list.extend(novels_from_end)
+
+    pprint(f"총 {len(novel_list)}개 데이터 로드 완료")
+
+    time.sleep(10)
+
     conn = sqlite3.connect('joara_novel.db')
     cur = conn.cursor()
 
@@ -47,14 +62,15 @@ def store_db():
             tag TEXT,
             keyword TEXT,
             chapter INTEGER,
-            view INTEGER,
+            views INTEGER,
             like INTEGER,
             favorite INTEGER,
             thumbnail TEXT,
+            locate TEXT,
             finish_state TEXT,
             is_finish TEXT,
             createdDate DATETIME,
-            updatedDate DATETIME,
+            updatedate DATETIME,
             adult TEXT,
             crawl_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
@@ -124,14 +140,14 @@ def store_db():
                 cur.execute("""
                     UPDATE novel
                     SET platform=?, title=?, info=?, author=?, author_id=?, tag=?, keyword=?,
-                        chapter=?, view=?, like=?, favorite=?, thumbnail=?, finish_state=?,
-                        is_finish=?, createdDate=?, updatedDate=?, adult=?, crawl_timestamp=?
+                        chapter=?, views=?, like=?, favorite=?, thumbnail=?, locate=?, finish_state=?,
+                        is_finish=?, createdDate=?, updatedate=?, adult=?, crawl_timestamp=?
                     WHERE id=?
                 """, (
                     novel.get("platform"), novel.get("title"), novel.get("info"), novel.get("author"),
                     novel.get("author_id"), novel.get("tag"), novel.get("keyword"),
                     novel.get("chapter"), novel.get("view"), novel.get("like"), novel.get("favorite"),
-                    novel.get("thumbnail"), novel.get("finish_state"), novel.get("is_finish"),
+                    novel.get("thumbnail"), novel.get("locate"), novel.get("finish_state"), novel.get("is_finish"),
                     novel.get("createdDate"), novel.get("updatedDate"), novel.get("adult"),
                     novel.get("crawl_timestamp"), novel_id
                 ))
@@ -139,13 +155,13 @@ def store_db():
             print(f"ID:{novel_id}는 존재하지 않습니다. 새 레코드를 삽입합니다.")
             cur.execute("""
                 INSERT INTO novel 
-                (id, platform, title, info, author, author_id, tag, keyword, chapter, view, like, favorite,
-                 thumbnail, finish_state, is_finish, createdDate, updatedDate, adult, crawl_timestamp)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (id, platform, title, info, author, author_id, tag, keyword, chapter, views, like, favorite,
+                 thumbnail, locate, finish_state, is_finish, createdDate, updatedate, adult, crawl_timestamp)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 novel_id, novel.get("platform"), novel.get("title"), novel.get("info"), novel.get("author"),
                 novel.get("author_id"), novel.get("tag"), novel.get("keyword"), novel.get("chapter"),
-                novel.get("view"), novel.get("like"), novel.get("favorite"), novel.get("thumbnail"),
+                novel.get("view"), novel.get("like"), novel.get("favorite"), novel.get("thumbnail"), novel.get("locate"),
                 novel.get("finish_state"), novel.get("is_finish"), novel.get("createdDate"),
                 novel.get("updatedDate"), novel.get("adult"), novel.get("crawl_timestamp")
             ))
