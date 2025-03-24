@@ -153,3 +153,4 @@ cython_debug/
 *.db
 *.json
 /DB_processing_Log
+/.idea
