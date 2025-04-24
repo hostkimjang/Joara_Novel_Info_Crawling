@@ -8,13 +8,13 @@ from pprint import pprint
 
 def load_novel_data():
     # JSON 파일 이름을 실제 파일명으로 변경하세요.
-    with open('joara_novel_info.json', 'r', encoding='utf-8') as f:
+    with open('Joara_novel_info.json', 'r', encoding='utf-8') as f:
         data = json.load(f)
         pprint(f"총 {len(data)}개 데이터 로드 완료")
         return data
 
 def load_novel_data_end():
-    with open('joara_novel_info_end.json', 'r', encoding='utf-8') as f:
+    with open('Joara_novel_info_end.json', 'r', encoding='utf-8') as f:
         data = json.load(f)
         pprint(f"총 {len(data)}개 데이터 로드 완료")
         return data
