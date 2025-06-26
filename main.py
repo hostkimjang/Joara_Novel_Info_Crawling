@@ -6,8 +6,8 @@ import random
 import asyncio
 import aiohttp
 from dotenv import load_dotenv
-
 from DB_processing import store_db
+from DB_connect import store_db_joara_pg_copy
 from info import set_novel_info
 from store import store_info, store_info_end
 
@@ -106,6 +106,7 @@ async def fetch_novel_end(session, url, novel_list, sem, end_event):
                 else:
                     print(f"페이지 순회 {url}")
                     page = await res.json()
+                    pprint.pprint(page)
                     page = page['data']['list']
                     if not page:
                         print("더이상 list 가 존재 하지 않습니다.")
@@ -349,6 +350,7 @@ if __name__ == "__main__":
     asyncio.run(main())
     asyncio.run(main_async_end())
     store_db()
+    store_db_joara_pg_copy()
     # 미사용 asyncio.run(main_async())
     end = time.time()
     pprint.pprint(f"총 소요 시간: {end - start:.2f}초")
