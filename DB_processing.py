@@ -20,6 +20,35 @@ def load_novel_data_end():
         return data
 
 
+def safe_parse_datetime(date_str):
+    """안전한 날짜 문자열 파싱 함수"""
+    if not date_str:
+        return None
+    
+    date_str = str(date_str).strip()
+    
+    # 다양한 날짜 형식 시도
+    formats = [
+        '%Y-%m-%d %H:%M:%S',  # 2002-10-18 08:03:12
+        '%Y%m%d%H%M%S',  # 20021018080312
+        '%Y-%m-%dT%H:%M:%S',  # ISO format
+        '%Y-%m-%dT%H:%M:%S.%f',  # ISO format with microseconds
+        '%Y-%m-%dT%H:%M:%S.%fZ',  # ISO format with timezone
+        '%Y-%m-%dT%H:%M:%SZ',  # ISO format with timezone
+        '%Y-%m-%d %H:%M:%S.%f',  # with microseconds
+        '%Y-%m-%d',  # date only
+    ]
+    
+    for fmt in formats:
+        try:
+            return datetime.strptime(date_str, fmt)
+        except ValueError:
+            continue
+    
+    # 모든 형식이 실패하면 원본 문자열 반환
+    print(f"Warning: Could not parse date '{date_str}', using original value")
+    return date_str
+
 def change_log(result):
     timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
     log_directory = 'DB_Processing_Log'
@@ -88,13 +117,13 @@ def store_db():
 
         # "createdDate"와 "updatedDate"를 datetime 객체로 변환한 후, 지정 포맷의 문자열로 변환
         try:
-            novel["createdDate"] = datetime.strptime(novel["createdDate"], "%Y%m%d%H%M%S").strftime("%Y-%m-%d %H:%M:%S")
+            novel["createdDate"] = safe_parse_datetime(novel["createdDate"]).strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
             print(f"Error converting createdDate for novel {novel.get('id')}: {e}")
             novel["createdDate"] = novel.get("createdDate")  # 변환 실패 시 원본 사용
 
         try:
-            novel["updatedDate"] = datetime.strptime(novel["updatedDate"], "%Y%m%d%H%M%S").strftime("%Y-%m-%d %H:%M:%S")
+            novel["updatedDate"] = safe_parse_datetime(novel["updatedDate"]).strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
             print(f"Error converting updatedDate for novel {novel.get('id')}: {e}")
             novel["updatedDate"] = novel.get("updatedDate")  # 변환 실패 시 원본 사용
