@@ -280,7 +280,8 @@ def store_db_joara_pg_copy():
                     is_finish TEXT,
                     createddate TIMESTAMP WITH TIME ZONE,
                     updatedate TIMESTAMP WITH TIME ZONE,
-                    adult TEXT
+                    adult TEXT,
+                    crawl_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
                 );
                 """
 
@@ -299,7 +300,7 @@ def store_db_joara_pg_copy():
                     columns = [ 'id', 'platform', 'title', 'info', 'author', 'author_id',
                                 'tag', 'keyword', 'chapter', 'views', 'like', 'favorite',
                                 'thumbnail', 'locate', 'finish_state', 'is_finish',
-                                'createddate', 'updatedate', 'adult']
+                                'createddate', 'updatedate', 'adult', 'crawl_timestamp' ]
                     
                     # CSV 헤더 작성
                     writer.writerow(columns)
@@ -358,7 +359,8 @@ def store_db_joara_pg_copy():
                     is_finish = temp.is_finish,
                     createddate = temp.createddate,
                     updatedate = temp.updatedate,
-                    adult = temp.adult  
+                    adult = temp.adult,
+                    crawl_timestamp = temp.crawl_timestamp
                 FROM {temp_table_name} temp
                 WHERE joara.id = temp.id;
                 """
